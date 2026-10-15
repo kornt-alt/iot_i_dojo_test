@@ -22,6 +22,7 @@ const handleTap = wrap(async (req, res) => {
   const body = req.body && typeof req.body === 'object' ? req.body : {};
   const rawName = pick(body, 'name') ?? pick(req.query, 'name');
   const rawCard = pick(body, 'card') ?? pick(req.query, 'card');
+  const format  = pick(body, 'format') ?? pick(req.query, 'format');
 
   const { result, name, card, employee } = checkCard(rawName, rawCard);
   await appendTap({
@@ -31,7 +32,19 @@ const handleTap = wrap(async (req, res) => {
     empNo: employee && employee.empNo,
   });
 
-  res.type('text/plain').send(result === 'OK' ? '1' : '0');
+  const ok = result === 'OK';
+
+  if (format === 'json') {
+    return res.json({
+      ok,
+      result,                              // 'OK' หรือเหตุผลที่ไม่ผ่าน
+      empNo:   employee ? employee.empNo   : null,
+      empName: employee ? employee.empName : null,
+    });
+  }
+
+  // reader เดิม
+  res.type('text/plain').send(ok ? '1' : '0');
 });
 
 router.get('/', handleTap);
